@@ -51,6 +51,10 @@ docker run -it python-nanoserver:$IMAGE_TAG
 
 This image includes pip and virtualenv.
 
+## Django Example
+
+The `django_example` directory contains how to build a Nano Server-based Django application container.
+
 ## Contribution
 
 I tested this Docker image for Windows Nano Server 1809. If you make a docker image for another version of Windows, please make a pull request with some tests.
