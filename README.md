@@ -4,11 +4,20 @@ Windows Nano Server is an SKU designed for the cloud computing environment. But 
 
 This repository contains a Python docker image build script for Windows Nano Server.
 
+[Docker Hub](https://hub.docker.com/repository/docker/rkttu/python-nanoserver)
+
 ## Why I make this script
 
 I want to run a simple Python script in my Windows container environment and Windows Kubernetes environment. But currently, the official Python Windows Server image does not support the Nano server directly. It requires the Windows Server Core base image, which has about 2GiB size.
 
 ## How to use
+
+```bash
+docker pull rkttu/python-nanoserver:3.7.4_1809
+docker run -it rkttu/python-nanoserver:$IMAGE_TAG
+```
+
+## How to build
 
 You can build your Nano Server-based Python image with the below command.
 
