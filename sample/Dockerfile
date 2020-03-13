@@ -31,7 +31,7 @@ USER ContainerAdministrator
 ENV PYTHONPATH C:\\Python;C:\\Python\\Scripts;C:\\Python\\DLLs;C:\\Python\\Lib;C:\\Python\\Lib\\plat-win;C:\\Python\\Lib\\site-packages
 RUN setx.exe /m PATH %PATH%;%PYTHONPATH% && \
     setx.exe /m PYTHONPATH %PYTHONPATH% && \
-    setx.exe /m PIP_CACHE_DIR %LOCALAPPDATA% && \
+    setx.exe /m PIP_CACHE_DIR C:\Users\ContainerUser\AppData\Local\pip\Cache && \
     reg.exe ADD HKLM\SYSTEM\CurrentControlSet\Control\FileSystem /v LongPathsEnabled /t REG_DWORD /d 1 /f
 
 # https://soooprmx.com/archives/6471

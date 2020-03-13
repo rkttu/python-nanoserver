@@ -67,6 +67,10 @@ I tested this Docker image for Windows Nano Server 1809. If you make a docker im
 - The image you built can install AWS CLI, and it does not display .py file association missing error.
 - More testing criteria are welcome!
 
+## Updates
+
+- Mar.14th.2020: Change `PIP_CACHE_DIR` directory path to ContainerUser account.
+
 ## Roadmap
 
 If available, I want to contribute this repository to the official Python Docker image repository. But currently, the official repository has complicated build rules for Windows images. I think the Windows image is far different than Linux, so it would be better to handle separately.
