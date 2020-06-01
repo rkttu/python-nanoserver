@@ -27,7 +27,7 @@ jobs:
       working-directory: sample
       env:
         TARGET_PYTHON_PIP_VERSION: 20.0.2
-        TARGET_PYTHON_GET_PIP_URL: https://github.com/pypa/get-pip/raw/d59197a3c169cef378a22428a3fa99d33e080a5d/get-pip.py:  
+        TARGET_PYTHON_GET_PIP_URL: https://github.com/pypa/get-pip/raw/d59197a3c169cef378a22428a3fa99d33e080a5d/get-pip.py
         EACH_PYTHON_VERSION: 3.7.4
         EACH_WIN_VERSION: 1809
       shell: powershell
