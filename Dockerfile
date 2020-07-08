@@ -1,19 +1,14 @@
-ARG BUILD_WINDOWS_VERSION
-FROM mcr.microsoft.com/windows/servercore:${BUILD_WINDOWS_VERSION}
+ARG WINDOWS_VERSION
+FROM mcr.microsoft.com/windows/servercore:$WINDOWS_VERSION
 
-ARG BUILD_PYTHON_VERSION
-ENV PYTHON_VERSION ${BUILD_PYTHON_VERSION}
-
-ARG BUILD_PYTHON_RELEASE
-ENV PYTHON_RELEASE ${BUILD_PYTHON_RELEASE}
-
+ARG PYTHON_VERSION=3.7.4
+ARG PYTHON_RELEASE=3.7.4
 # if this is called "PIP_VERSION", pip explodes with "ValueError: invalid truth value '<VERSION>'"
-ARG BUILD_PYTHON_PIP_VERSION
-ENV PYTHON_PIP_VERSION ${BUILD_PYTHON_PIP_VERSION}
-
+ARG PYTHON_PIP_VERSION=20.0.2
 # https://github.com/pypa/get-pip
-ARG BUILD_PYTHON_GET_PIP_URL
-ENV PYTHON_GET_PIP_URL ${BUILD_PYTHON_GET_PIP_URL}
+ARG PYTHON_GET_PIP_URL=https://github.com/pypa/get-pip/raw/d59197a3c169cef378a22428a3fa99d33e080a5d/get-pip.py
+
+USER ContainerAdministrator
 
 WORKDIR C:\\Temp
 SHELL ["powershell", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'Continue'; $verbosePreference='Continue';"]
@@ -31,7 +26,7 @@ RUN $FileVer = [System.Version]::Parse([System.Diagnostics.FileVersionInfo]::Get
     Remove-Item -Path "Python\python$Postfix.zip"; \
     New-Item -Type Directory -Path "Python\DLLs";
 
-FROM mcr.microsoft.com/windows/nanoserver:${BUILD_WINDOWS_VERSION}
+FROM mcr.microsoft.com/windows/nanoserver:$WINDOWS_VERSION
 COPY --from=0 C:\\Temp\\Python C:\\Python
 
 USER ContainerAdministrator
