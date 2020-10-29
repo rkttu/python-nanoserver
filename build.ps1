@@ -1,8 +1,11 @@
 #!/usr/bin/env pwsh
-$TARGET_PYTHON_VERSION=('3.7.3', '3.7.4', '3.7.5', '3.7.6', '3.7.8', '3.8.0', '3.8.1', '3.8.2', '3.8.3')
-$TARGET_WINDOWS_VERSION=('1809', '1903', '1909', '2004')
+$TARGET_PYTHON_VERSION=(
+    '3.7.3', '3.7.4', '3.7.5', '3.7.6', '3.7.7', '3.7.8', '3.7.9',
+    '3.8.0', '3.8.1', '3.8.2', '3.8.3', '3.8.4', '3.8.5', '3.8.6',
+    '3.9.0')
+$TARGET_WINDOWS_VERSION=('1809', '1903', '1909', '2004', '2009')
 
-$TARGET_PYTHON_PIP_VERSION='20.1.1'
+$TARGET_PYTHON_PIP_VERSION='20.2.4'
 $TARGET_PYTHON_GET_PIP_URL='https://github.com/pypa/get-pip/raw/d59197a3c169cef378a22428a3fa99d33e080a5d/get-pip.py'
 
 foreach ($EACH_PYTHON_VERSION in $TARGET_PYTHON_VERSION) {
