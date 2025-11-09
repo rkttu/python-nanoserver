@@ -1,5 +1,7 @@
 # Python Docker Image for Nano Server
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 Windows Nano Server is an SKU designed for the cloud computing environment. But Nano Server is entirely different between the traditional Windows Server operating system. It is just a minimal subset of the existing Windows operating system, so many capabilities are missing.
 
 This repository contains a Python docker image build script for Windows Nano Server.
@@ -65,3 +67,7 @@ I tested this Docker image for Windows Nano Server 1809. If you make a docker im
 ## Roadmap
 
 If available, I want to contribute this repository to the official Python Docker image repository. But currently, the official repository has complicated build rules for Windows images. I think the Windows image is far different than Linux, so it would be better to handle separately.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
