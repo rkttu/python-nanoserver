@@ -29,6 +29,8 @@ env:
 jobs:
   detect-python-versions:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     outputs:
       versions: ${{ steps.get-versions.outputs.versions }}
       matrix: ${{ steps.set-matrix.outputs.matrix }}
