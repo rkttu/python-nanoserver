@@ -1,0 +1,206 @@
+name: Build and Push Python Nano Server Images
+
+on:
+  schedule:
+    # Run daily at 2 AM UTC to check for new Python versions
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      python_versions:
+        description: 'Python versions to build (comma-separated, e.g., 3.11.9,3.12.3)'
+        required: false
+        type: string
+      windows_versions:
+        description: 'Windows versions to build (comma-separated, e.g., ltsc2022,ltsc2019)'
+        required: false
+        type: string
+        default: 'ltsc2022,ltsc2019'
+  push:
+    branches:
+      - main
+    paths:
+      - 'Dockerfile'
+      - '.github/workflows/build-and-push.yml'
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  detect-python-versions:
+    runs-on: ubuntu-latest
+    outputs:
+      versions: ${{ steps.get-versions.outputs.versions }}
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Get latest Python versions
+        id: get-versions
+        run: |
+          # Fetch tags from cpython repository
+          echo "Fetching Python tags from cpython repository..."
+          
+          # Get the latest stable versions for each minor version (3.9, 3.10, 3.11, 3.12, etc.)
+          TAGS=$(curl -s "https://api.github.com/repos/python/cpython/tags?per_page=100" | \
+            jq -r '.[].name' | \
+            grep -E '^v3\.[0-9]+\.[0-9]+$' | \
+            sed 's/^v//' | \
+            sort -V -r)
+          
+          echo "Available Python versions:"
+          echo "$TAGS"
+          
+          # Get latest version for each minor release (3.9.x, 3.10.x, 3.11.x, 3.12.x, 3.13.x)
+          LATEST_VERSIONS=$(echo "$TAGS" | awk -F. '{print $1"."$2"."$3}' | \
+            awk -F. '!seen[$1"."$2]++ {print $1"."$2"."$3}' | \
+            head -5)
+          
+          echo "Latest versions for each minor release:"
+          echo "$LATEST_VERSIONS"
+          
+          # Convert to JSON array
+          VERSIONS_JSON=$(echo "$LATEST_VERSIONS" | jq -R -s -c 'split("\n") | map(select(length > 0))')
+          echo "versions=$VERSIONS_JSON" >> $GITHUB_OUTPUT
+          echo "Selected versions: $VERSIONS_JSON"
+
+      - name: Set build matrix
+        id: set-matrix
+        run: |
+          # Use manual input if provided, otherwise use detected versions
+          if [ -n "${{ github.event.inputs.python_versions }}" ]; then
+            PYTHON_VERSIONS='["${{ github.event.inputs.python_versions }}"]'
+            PYTHON_VERSIONS=$(echo "${{ github.event.inputs.python_versions }}" | jq -R -c 'split(",") | map(select(length > 0))')
+          else
+            PYTHON_VERSIONS='${{ steps.get-versions.outputs.versions }}'
+          fi
+          
+          # Use manual input for Windows versions if provided
+          if [ -n "${{ github.event.inputs.windows_versions }}" ]; then
+            WINDOWS_VERSIONS=$(echo "${{ github.event.inputs.windows_versions }}" | jq -R -c 'split(",") | map(select(length > 0))')
+          else
+            # Default Windows versions to support
+            WINDOWS_VERSIONS='["ltsc2022","ltsc2019"]'
+          fi
+          
+          # Create matrix
+          MATRIX=$(jq -n \
+            --argjson python "$PYTHON_VERSIONS" \
+            --argjson windows "$WINDOWS_VERSIONS" \
+            '{python_version: $python, windows_version: $windows}')
+          
+          echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
+          echo "Build matrix: $MATRIX"
+
+  build-and-push:
+    needs: detect-python-versions
+    runs-on: windows-2022
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.detect-python-versions.outputs.matrix) }}
+    
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata for Docker
+        id: meta
+        run: |
+          $IMAGE_TAG = "${{ matrix.python_version }}_${{ matrix.windows_version }}"
+          echo "image_tag=$IMAGE_TAG" >> $env:GITHUB_OUTPUT
+          
+          # Generate Docker tags
+          $REPO_LOWER = "${{ env.IMAGE_NAME }}".ToLower()
+          $TAGS = @(
+            "${{ env.REGISTRY }}/${REPO_LOWER}:${IMAGE_TAG}",
+            "${{ env.REGISTRY }}/${REPO_LOWER}:${{ matrix.python_version }}"
+          )
+          
+          # Add latest tag for the newest Python version with ltsc2022
+          echo "tags=$($TAGS -join ',')" >> $env:GITHUB_OUTPUT
+          Write-Host "Docker tags: $($TAGS -join ',')"
+
+      - name: Determine pip version
+        id: pip-version
+        run: |
+          # Use a recent stable pip version
+          echo "pip_version=24.0" >> $env:GITHUB_OUTPUT
+
+      - name: Build Docker image
+        run: |
+          $IMAGE_TAG = "${{ steps.meta.outputs.image_tag }}"
+          $PYTHON_VERSION = "${{ matrix.python_version }}"
+          $WINDOWS_VERSION = "${{ matrix.windows_version }}"
+          $PIP_VERSION = "${{ steps.pip-version.outputs.pip_version }}"
+          $GET_PIP_URL = "https://bootstrap.pypa.io/get-pip.py"
+          
+          Write-Host "Building image: $IMAGE_TAG"
+          Write-Host "Python version: $PYTHON_VERSION"
+          Write-Host "Windows version: $WINDOWS_VERSION"
+          Write-Host "Pip version: $PIP_VERSION"
+          
+          docker build `
+            -t "python-nanoserver:$IMAGE_TAG" `
+            --build-arg WINDOWS_VERSION=$WINDOWS_VERSION `
+            --build-arg PYTHON_VERSION=$PYTHON_VERSION `
+            --build-arg PYTHON_RELEASE=$PYTHON_VERSION `
+            --build-arg PYTHON_PIP_VERSION=$PIP_VERSION `
+            --build-arg PYTHON_GET_PIP_URL=$GET_PIP_URL `
+            .
+          
+          if ($LASTEXITCODE -ne 0) {
+            Write-Error "Docker build failed with exit code $LASTEXITCODE"
+            exit $LASTEXITCODE
+          }
+
+      - name: Test Docker image
+        run: |
+          $IMAGE_TAG = "${{ steps.meta.outputs.image_tag }}"
+          
+          Write-Host "Testing Python version..."
+          docker run --rm "python-nanoserver:$IMAGE_TAG" python --version
+          
+          Write-Host "Testing pip installation..."
+          docker run --rm "python-nanoserver:$IMAGE_TAG" pip --version
+          
+          Write-Host "Testing virtualenv installation..."
+          docker run --rm "python-nanoserver:$IMAGE_TAG" virtualenv --version
+
+      - name: Tag and push to GitHub Container Registry
+        run: |
+          $REPO_LOWER = "${{ env.IMAGE_NAME }}".ToLower()
+          $IMAGE_TAG = "${{ steps.meta.outputs.image_tag }}"
+          $PYTHON_VERSION = "${{ matrix.python_version }}"
+          
+          # Tag for specific Windows version
+          $FULL_TAG = "${{ env.REGISTRY }}/${REPO_LOWER}:${IMAGE_TAG}"
+          docker tag "python-nanoserver:$IMAGE_TAG" $FULL_TAG
+          docker push $FULL_TAG
+          
+          # Tag for Python version (latest Windows version)
+          if ("${{ matrix.windows_version }}" -eq "ltsc2022") {
+            $VERSION_TAG = "${{ env.REGISTRY }}/${REPO_LOWER}:${PYTHON_VERSION}"
+            docker tag "python-nanoserver:$IMAGE_TAG" $VERSION_TAG
+            docker push $VERSION_TAG
+          }
+          
+          Write-Host "Successfully pushed image tags"
+
+      - name: Clean up
+        if: always()
+        run: |
+          $IMAGE_TAG = "${{ steps.meta.outputs.image_tag }}"
+          docker rmi "python-nanoserver:$IMAGE_TAG" -f 2>$null
+          docker system prune -f
