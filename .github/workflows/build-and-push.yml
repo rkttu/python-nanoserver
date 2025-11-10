@@ -11,10 +11,10 @@ on:
         required: false
         type: string
       windows_versions:
-        description: 'Windows versions to build (comma-separated, e.g., ltsc2022,ltsc2019)'
+        description: 'Windows versions to build (comma-separated, e.g., ltsc2025,ltsc2022,ltsc2019)'
         required: false
         type: string
-        default: 'ltsc2022,ltsc2019'
+        default: 'ltsc2025,ltsc2022,ltsc2019'
   push:
     branches:
       - main
@@ -83,7 +83,7 @@ jobs:
             WINDOWS_VERSIONS=$(echo "${{ github.event.inputs.windows_versions }}" | jq -R -c 'split(",") | map(select(length > 0))')
           else
             # Default Windows versions to support
-            WINDOWS_VERSIONS='["ltsc2022","ltsc2019"]'
+            WINDOWS_VERSIONS='["ltsc2025","ltsc2022","ltsc2019"]'
           fi
           
           # Create matrix
@@ -192,7 +192,7 @@ jobs:
           docker push $FULL_TAG
           
           # Tag for Python version (latest Windows version)
-          if ("${{ matrix.windows_version }}" -eq "ltsc2022") {
+          if ("${{ matrix.windows_version }}" -eq "ltsc2025") {
             $VERSION_TAG = "${{ env.REGISTRY }}/${REPO_LOWER}:${PYTHON_VERSION}"
             docker tag "python-nanoserver:$IMAGE_TAG" $VERSION_TAG
             docker push $VERSION_TAG
