@@ -22,13 +22,13 @@ The images are automatically built and published to GitHub Container Registry (G
 
 ```powershell
 # Pull a specific Python version with Windows version
-docker pull ghcr.io/rkttu/python-nanoserver:3.12.3_ltsc2022
+docker pull ghcr.io/rkttu/python-nanoserver:3.12.3_ltsc2025
 
-# Pull latest build for a Python version (uses latest Windows version)
+# Pull latest build for a Python version (uses latest Windows version - ltsc2025)
 docker pull ghcr.io/rkttu/python-nanoserver:3.12.3
 
 # Run the container
-docker run -it ghcr.io/rkttu/python-nanoserver:3.12.3_ltsc2022
+docker run -it ghcr.io/rkttu/python-nanoserver:3.12.3_ltsc2025
 ```
 
 ### Pull from Docker Hub (Legacy)
@@ -43,7 +43,7 @@ docker run -it rkttu/python-nanoserver:3.8.3_2004
 Images are tagged in the format: `{python_version}_{windows_version}`
 
 - Python versions: Latest stable releases for each minor version (e.g., 3.9.x, 3.10.x, 3.11.x, 3.12.x, 3.13.x)
-- Windows versions: `ltsc2022`, `ltsc2019`
+- Windows versions: `ltsc2025`, `ltsc2022`, `ltsc2019`
 
 ## How to build
 
@@ -90,7 +90,7 @@ I tested this Docker image for Windows Nano Server 1809. If you make a docker im
 This repository now includes an automated CI/CD pipeline that:
 
 - **Automatically tracks new Python releases**: Checks the [Python CPython repository tags](https://github.com/python/cpython/tags) daily for new stable versions
-- **Builds images for multiple Windows versions**: Creates Docker images for Windows Server LTSC 2022 and LTSC 2019
+- **Builds images for multiple Windows versions**: Creates Docker images for Windows Server LTSC 2025, LTSC 2022, and LTSC 2019
 - **Publishes to GitHub Container Registry**: Automatically pushes built images to GHCR with appropriate tags
 - **Supports manual triggers**: Can be manually triggered via GitHub Actions with custom Python and Windows versions
 
@@ -100,7 +100,7 @@ This repository now includes an automated CI/CD pipeline that:
 2. **Version detection**: Fetches the latest stable release for each Python minor version (3.9.x, 3.10.x, 3.11.x, etc.)
 3. **Matrix build**: Builds images in parallel for each Python version and Windows version combination
 4. **Testing**: Each built image is tested to verify Python, pip, and virtualenv are working correctly
-5. **Publishing**: Successfully built and tested images are pushed to GHCR with tags like `3.12.3_ltsc2022` and `3.12.3`
+5. **Publishing**: Successfully built and tested images are pushed to GHCR with tags like `3.12.3_ltsc2025`, `3.12.3_ltsc2022`, `3.12.3_ltsc2019`, and `3.12.3` (for ltsc2025)
 
 ### Manual workflow trigger
 
@@ -109,7 +109,7 @@ You can manually trigger a build with specific versions:
 1. Go to the [Actions tab](../../actions/workflows/build-and-push.yml)
 2. Click "Run workflow"
 3. Optionally specify Python versions (comma-separated, e.g., `3.11.9,3.12.3`)
-4. Optionally specify Windows versions (default: `ltsc2022,ltsc2019`)
+4. Optionally specify Windows versions (default: `ltsc2025,ltsc2022,ltsc2019`)
 
 ## Updates
 
