@@ -87,7 +87,7 @@ jobs:
           fi
           
           # Create matrix
-          MATRIX=$(jq -n \
+          MATRIX=$(jq -n --compact-output \
             --argjson python "$PYTHON_VERSIONS" \
             --argjson windows "$WINDOWS_VERSIONS" \
             '{python_version: $python, windows_version: $windows}')
